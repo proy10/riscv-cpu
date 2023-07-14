@@ -1,7 +1,7 @@
 module if_id(
   
   input wire        clk,
-  input wire        rst,
+  input wire        rst_n,
   input wire        jmp,
   input wire        if_id_stall,
   input wire[31:0]  inst_addr_from_if,
@@ -11,8 +11,8 @@ module if_id(
   
 );
  
-  always @ (posedge clk or posedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     inst_addr_to_id <= 32'bz;
   else if(if_id_stall)
     inst_addr_to_id <= inst_addr_to_id;
@@ -21,8 +21,8 @@ module if_id(
   else
     inst_addr_to_id <= inst_addr_from_if;
     
-  always @ (posedge clk or posedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     inst_to_id <= 32'bz;
   else if(if_id_stall)
     inst_to_id <= inst_to_id;

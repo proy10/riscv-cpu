@@ -3,7 +3,7 @@
 module riscv_soc_tb();
 
   reg     clk;
-  reg     rst;
+  reg     rst_n;
   
        
   initial begin
@@ -12,10 +12,10 @@ module riscv_soc_tb();
   end
       
   initial begin
-            rst = 1'b1;
-    #300    rst= 1'b0;
+            rst_n = 1'b1;
+    #300    rst_n= 1'b0;
     #100000 $display("---     result is %d         ---\n",verify);
-	#1000   $stop;   
+	#1000   $finish();   
   end
        
   wire[31:0] inst_addr;
@@ -32,7 +32,7 @@ module riscv_soc_tb();
 
  riscv riscv0(
 		.clk(clk),
-		.rst(rst),
+		.rst_n(rst_n),
 	
 		.inst_addr_o(inst_addr),
 		.inst_i(inst),

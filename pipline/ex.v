@@ -22,32 +22,32 @@ module ex(
 	 
   always @ *
   begin 
-  result <= 32'bx;
+  result = 32'bx;
     case(alu_op)
     ADD:
-      result <= reg_data1 + reg_data2;
+      result = reg_data1 + reg_data2;
     SUB:
-      result <= reg_data1 + (~reg_data2) + 32'b1;
+      result = reg_data1 + (~reg_data2) + 32'b1;
     SLL:
-      result <= reg_data1 << reg_data2[4:0];
+      result = reg_data1 << reg_data2[4:0];
     XOR:
-      result <= reg_data1 ^ reg_data2;
+      result = reg_data1 ^ reg_data2;
     SRL:
-      result <= reg_data1 >> reg_data2[4:0];
+      result = reg_data1 >> reg_data2[4:0];
     OR:
-      result <= reg_data1 | reg_data2;
+      result = reg_data1 | reg_data2;
     AND:
-      result <= reg_data1 & reg_data2;
+      result = reg_data1 & reg_data2;
     LW:
-      result <= reg_data1 + imm;
+      result = reg_data1 + imm;
     ADDI:
-      result <= reg_data1 + imm;
+      result = reg_data1 + imm;
     SW:
-      result <= reg_data1 + imm;
+      result = reg_data1 + imm;
     JAL:
-      result <= old_inst_addr + 32'd4;
+      result = old_inst_addr + 32'd4;
     default:
-      result <= 32'bz;
+      result = 32'bz;
     endcase
   end
   

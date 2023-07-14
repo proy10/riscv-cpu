@@ -9,8 +9,8 @@ module wb(
   
   always @ *
   if(read_mem)
-    write_back_data <= data_from_mem;
+    write_back_data = data_from_mem;
   else
-    write_back_data <= result;
+    write_back_data = result;
    
 endmodule

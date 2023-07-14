@@ -1,7 +1,7 @@
 module riscv(
 
 	input wire		 clk,
-	input wire		 rst,        // high is reset
+	input wire		 rst_n,        // lwo is reset
 	
     // inst_mem
 	input wire[31:0]         inst_i,
@@ -103,7 +103,7 @@ module riscv(
 	IF IF(
 	    //=================input=================//
 			.clk(clk),
-			.rst(rst),
+			.rst_n(rst_n),
 			.jmp(jmp),
 			.if_stall(if_stall),
 			.new_inst_addr(new_inst_addr),
@@ -115,7 +115,7 @@ module riscv(
   if_id IF_ID(
       //=================input=================//
       .clk(clk),
-		  .rst(rst),
+		  .rst_n(rst_n),
 		  .jmp(jmp),
 		  .if_id_stall(if_id_stall),
 		  .inst_addr_from_if(inst_addr),
@@ -183,9 +183,9 @@ module riscv(
       
   id_ex ID_EX(
       //=================input=================//
-      //-------------clk rst stall------------//
+      //-------------clk rst_n stall------------//
       .clk(clk),
-		  .rst(rst),
+		  .rst_n(rst_n),
 		  .if_id_stall(if_id_stall),
 		  //-------------for Data Hazard----------//
 		  .id_stall_req(id_stall_req),
@@ -247,9 +247,9 @@ module riscv(
     
   ex_mem EX_MEM(
       //=================input=================//
-      //-------------clk rst stall------------//
+      //-------------clk rst_n stall------------//
       .clk(clk),
-		  .rst(rst),
+		  .rst_n(rst_n),
 		  .ex_mem_stall(ex_mem_stall),
 		  //---------------reg addr---------------//
 		  .rd_from_ex(rd_to_ex),
@@ -285,9 +285,9 @@ module riscv(
     
   mem_wb MEM_WB(
       //=================input=================//
-      //----------------clk rst---------------//
+      //----------------clk rst_n---------------//
       .clk(clk),
-		.rst(rst),
+		.rst_n(rst_n),
 		//----------------reg addr--------------//
 		.rd_from_mem(rd_to_mem),
 		//----------------control---------------//
@@ -319,7 +319,7 @@ module riscv(
   register REGISTER(
       //=================input=================//
       .clk(clk),
-		.rst(rst),
+		.rst_n(rst_n),
 		.read_reg1(read_reg1),
       .read_reg2(read_reg2),
       .write_mem(write_mem),
