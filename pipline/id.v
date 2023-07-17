@@ -213,13 +213,13 @@ module id(
 	//If a comparison register is a destination of 
 	//immediately preceding load instruction
 	//Need 2 stall cycles
-	else if(inst[6:0]==B_TYPE && id_ex_write_reg && 
-	   id_ex_rd != 5'b0 && (id_ex_rd==inst[19:15] || 
-	   id_ex_rd==inst[24:20]))
-	       id_stall_req = 1'b1;
-	else if(inst[6:0]==B_TYPE && ex_mem_read_mem && 
-	   (ex_mem_rd==inst[19:15] || ex_mem_rd==inst[24:20]))
-	       id_stall_req = 1'b1;
+	// else if(inst[6:0]==B_TYPE && id_ex_write_reg && 
+	//    id_ex_rd != 5'b0 && (id_ex_rd==inst[19:15] || 
+	//    id_ex_rd==inst[24:20]))
+	//        id_stall_req = 1'b1;
+	// else if(inst[6:0]==B_TYPE && ex_mem_read_mem && 
+	//    (ex_mem_rd==inst[19:15] || ex_mem_rd==inst[24:20]))
+	//        id_stall_req = 1'b1;
 	else
 	       id_stall_req = 1'b0; 
 	       

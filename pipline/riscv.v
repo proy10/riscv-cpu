@@ -1,7 +1,7 @@
 module riscv(
 
 	input wire		 clk,
-	input wire		 rst_n,        // lwo is reset
+	input wire		 rst_n,        // low is reset
 	
     // inst_mem
 	input wire[31:0]         inst_i,
@@ -81,6 +81,11 @@ module riscv(
   wire[31:0]  new_reg_data2;
   wire[31:0]  br_new_reg_data1;//for branch 
   wire[31:0]  br_new_reg_data2;//for branch
+  ////////////////predicting////////////////
+  wire we_from_ex, jmp_from_ex, flush;
+  wire [31:0] new_inst_addr_from_ex;
+  wire we_to_id, jmp_to_id; 
+  wire jmp_to_ex;
   
   //parameter
 	parameter ADD  = 6'b000001;
@@ -107,11 +112,13 @@ module riscv(
 			.jmp(jmp),
 			.if_stall(if_stall),
 			.new_inst_addr(new_inst_addr),
+      .jmp_from_ex(jmp_from_ex),
+      .new_inst_addr_from_ex(new_inst_addr_from_ex),
 			//================output=================//
 			.ce(inst_ce_o),
 			.inst_addr(inst_addr)
 		);
-		
+	
   if_id IF_ID(
       //=================input=================//
       .clk(clk),
@@ -120,9 +127,14 @@ module riscv(
 		  .if_id_stall(if_id_stall),
 		  .inst_addr_from_if(inst_addr),
 		  .inst_from_if(inst_i),
+      .jmp_from_ex(jmp_from_ex),
+      .flush(flush),
+      .we_from_ex(we_from_ex),
 		  //================output=================//
 		  .inst_addr_to_id(inst_addr_to_id),
-		  .inst_to_id(inst_to_id)
+		  .inst_to_id(inst_to_id),
+      .we_to_id(we_to_id),
+      .jmp_to_id(jmp_to_id)
   );
     
   id #(
@@ -163,7 +175,7 @@ module riscv(
      //-------------for Data Hazard----------//
       .id_stall_req(id_stall_req)  
     );
-    
+
   branch_and_jmp #(
  	    .BEQ(BEQ),
 	    .BLT(BLT),
@@ -171,16 +183,20 @@ module riscv(
 	    .JAL(JAL)
 	)BRANCH_AND_JMP(
       //=================input=================//
+      .clk(clk),
+      .rst_n(rst_n),
       .alu_op(alu_op),
-      .reg_data1(br_new_reg_data1),
-      .reg_data2(br_new_reg_data2),
+      // .reg_data1(br_new_reg_data1),
+      // .reg_data2(br_new_reg_data2),
       .imm(imm),
       .old_inst_addr(inst_addr_to_id),
+      .we(we_to_id),
+      .jmp_from_ex(jmp_to_id),
       //================output=================//
       .jmp(jmp),
       .new_inst_addr(new_inst_addr)
     );
-      
+  
   id_ex ID_EX(
       //=================input=================//
       //-------------clk rst_n stall------------//
@@ -199,6 +215,8 @@ module riscv(
 		  .write_reg_from_id(write_reg),
 		  .read_mem_from_id(read_mem),
 		  .write_mem_from_id(write_mem),
+      .jmp_from_id(jmp),
+      .flush(flush),
 		  //------------------data----------------//
 		  .imm_from_id(imm),
 		  .reg_data1_from_reg(reg_data1),
@@ -215,6 +233,7 @@ module riscv(
 		  .write_reg_to_ex(write_reg_to_ex),
 		  .read_mem_to_ex(read_mem_to_ex),
 		  .write_mem_to_ex(write_mem_to_ex),
+      .jmp_to_ex(jmp_to_ex),
 		  //------------------data-----------------//
 		  .imm_to_ex(imm_to_ex),
 		  .reg_data1_to_ex(reg_data1_to_ex),
@@ -241,8 +260,13 @@ module riscv(
       .reg_data2(new_reg_data2),
       .imm(imm_to_ex),
       .old_inst_addr(inst_addr_to_ex),
+      .jmp_from_id(jmp_to_ex),
       //================output=================//
-      .result(result)
+      .result(result),
+      .jmp(jmp_from_ex),
+      .flush(flush),
+      .we(we_from_ex),
+      .new_inst_addr(new_inst_addr_from_ex)
     );
     
   ex_mem EX_MEM(
