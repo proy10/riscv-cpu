@@ -1,9 +1,9 @@
 module mem_wb(
   
   //=================input=================//
-  //----------------clk rst---------------//
+  //----------------clk rst_n---------------//
   input wire        clk,
-  input wire        rst,
+  input wire        rst_n,
   //----------------reg addr--------------//
   input wire[4:0]   rd_from_mem,
   //----------------control---------------//
@@ -24,32 +24,32 @@ module mem_wb(
   
 );
 
-  always @ (posedge clk or negedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     rd_to_reg <= 5'bz;
   else
     rd_to_reg <= rd_from_mem;
     
-  always @ (posedge clk or negedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     write_reg_to_reg <= 1'bz;
   else
     write_reg_to_reg <= write_reg_from_mem;
     
-  always @ (posedge clk or negedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     read_mem_to_wb <= 1'bz;
   else
     read_mem_to_wb <= read_mem_from_mem;
     
-  always @ (posedge clk or negedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     result_to_wb <= 32'bz;
   else
     result_to_wb <= result_from_mem;
     
-  always @ (posedge clk or negedge rst)
-  if(rst)
+  always @ (posedge clk or negedge rst_n)
+  if(!rst_n)
     data_from_mem_to_wb <= 32'bz;
   else
     data_from_mem_to_wb <= data_from_mem_from_mem;

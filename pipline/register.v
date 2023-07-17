@@ -1,7 +1,7 @@
 module register(
   
   input wire       clk,
-  input wire       rst,
+  input wire       rst_n,
   input wire       read_reg1,
   input wire       read_reg2,
   input wire       write_mem,
@@ -21,32 +21,32 @@ module register(
   always @ *
   if(read_reg1)
     if(write_reg && rs1 == rd)//data transform
-      reg_data1 <= write_back_data;
+      reg_data1 = write_back_data;
     else
-      reg_data1 <= registers[rs1];
+      reg_data1 = registers[rs1];
   else
-    reg_data1 <= 32'bz;
+    reg_data1 = 32'bz;
     
   always @ *
   if(read_reg2)
     if(write_reg && rs2 == rd)//data transform
-      reg_data2 <= write_back_data;
+      reg_data2 = write_back_data;
     else
-      reg_data2 <= registers[rs2];
+      reg_data2 = registers[rs2];
   else
-    reg_data2 <= 32'bz;
+    reg_data2 = 32'bz;
     
   always @ *
   if(write_mem)
     if(write_reg && rs2 == rd)//data transform
-      data_to_mem <= write_back_data;
+      data_to_mem = write_back_data;
     else
-      data_to_mem <= registers[rs2];
+      data_to_mem = registers[rs2];
   else
-    data_to_mem <= 32'bz;
+    data_to_mem = 32'bz;
     
-  always @ (posedge clk or posedge rst)
-  if(rst)
+  always @ (posedge clk or edge rst_n)
+  if(!rst_n)
     registers[0] <= 32'b0;
   else if(write_reg && rd!=5'b0)
     registers[rd] <= write_back_data;

@@ -1,7 +1,7 @@
 module IF(
 
 	input wire		 clk,
-	input wire		 rst,        // high is reset
+	input wire		 rst_n,        // low is reset
 	input wire		 jmp,
 	input wire       if_stall,
 	input wire[31:0] new_inst_addr,
@@ -11,14 +11,14 @@ module IF(
 );
   reg[31:0] pc;//point to the next instruction
   
-	always @ (posedge clk or posedge rst)
-	if(rst)
+	always @ (posedge clk or negedge rst_n)
+	if(!rst_n)
 		ce <= 1'b0;
 	else
 		ce <= 1'b1;
 
-	always @ (posedge clk or posedge rst)
-	if(rst)
+	always @ (posedge clk or negedge rst_n)
+	if(!rst_n)
 		pc <= 32'b0;
 	else if(if_stall)
 		pc <= pc;
@@ -27,8 +27,8 @@ module IF(
 	else
 		pc <= pc + 32'd4;
 
-	always @ (posedge clk or posedge rst)
-	if(rst)
+	always @ (posedge clk or negedge rst_n)
+	if(!rst_n)
 		inst_addr <= 32'b0;
 	else if(if_stall)
 		inst_addr <= inst_addr;

@@ -10,22 +10,22 @@ module mem(
   
   always@ *
   if(read_mem || write_mem)
-    ce <= 1'b1;
+    ce = 1'b1;
   else
-    ce <= 1'b0;
+    ce = 1'b0;
   
   always@ *
   if(read_mem)
-    we <= 1'b0;
+    we = 1'b0;
   else if(write_mem)
-    we <= 1'b1;
+    we = 1'b1;
   else
-    we <= 1'bz;
+    we = 1'bz;
     
   always@ *
   if(read_mem || write_mem)
-    data_addr <= result;
+    data_addr = result;
   else
-    data_addr <= 32'bz;
+    data_addr = 32'bz;
     
   endmodule

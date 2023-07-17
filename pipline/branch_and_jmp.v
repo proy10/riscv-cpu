@@ -22,9 +22,9 @@ module branch_and_jmp(
      (alu_op == BLT && reg_data1 <  reg_data2) ||
      (alu_op == BGE && reg_data1 >= reg_data2) ||
      (alu_op == JAL))
-        jmp <= 1'b1;
+        jmp = 1'b1;
   else
-        jmp <= 1'b0;  
+        jmp = 1'b0;  
 
   assign new_inst_addr = old_inst_addr + imm;
         

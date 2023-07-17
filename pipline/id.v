@@ -47,45 +47,45 @@ module id(
 	
 	always @ *
 	begin
-	  alu_op <= 6'bx;
+	  alu_op = 6'bx;
 		case(inst[6:0])
 			R_TYPE: 
 				case(inst[14:12])
 					3'b000:
 						if(inst[31:25] == 7'b0)
-							alu_op <= ADD;
+							alu_op = ADD;
 						else
-							alu_op <= SUB;
+							alu_op = SUB;
 					3'b001:
-						alu_op <= SLL;
+						alu_op = SLL;
 					3'b100:
-						alu_op <= XOR;
+						alu_op = XOR;
 					3'b101:
-						alu_op <= SRL;
+						alu_op = SRL;
 					3'b110:
-						alu_op <= OR;
+						alu_op = OR;
 					3'b111:
-						alu_op <= AND;
+						alu_op = AND;
 					default:
-					  alu_op <= 6'bz;
+					  alu_op = 6'bz;
 				endcase
 			I_TYPE_L:
-				alu_op <= LW;
+				alu_op = LW;
 			I_TYPE_I:
-				alu_op <= ADDI;
+				alu_op = ADDI;
 			S_TYPE:
-				alu_op <= SW;
+				alu_op = SW;
 			B_TYPE:
 				if(inst[14:12] == 3'b000)
-					alu_op <= BEQ;
+					alu_op = BEQ;
 				else if(inst[14:12] == 3'b100)
-					alu_op <= BLT;
+					alu_op = BLT;
 				else
-				  alu_op <= BGE;
+				  alu_op = BGE;
 			J_TYPE:
-				alu_op <= JAL;
+				alu_op = JAL;
 			default:
-			  alu_op <= 6'bz;
+			  alu_op = 6'bz;
 		endcase
 	end
 
@@ -95,9 +95,9 @@ module id(
 	   inst[6:0] == I_TYPE_I ||
 	   inst[6:0] == S_TYPE   ||
 	   inst[6:0] == B_TYPE)//R or I or S or B
-	    read_reg1 <= 1'b1;
+	    read_reg1 = 1'b1;
 	else
-	    read_reg1 <= 1'b0;
+	    read_reg1 = 1'b0;
 	    
  	always @ *
 	if(inst[6:0] == R_TYPE   ||
@@ -105,55 +105,55 @@ module id(
 	   inst[6:0] == I_TYPE_I ||
 	   inst[6:0] == S_TYPE   ||
 	   inst[6:0] == B_TYPE)//R or I or S or B
-	    rs1 <= inst[19:15];
+	    rs1 = inst[19:15];
 	else
-	    rs1 <= 5'bz;
+	    rs1 = 5'bz;
 	    
 	always @ *
 	if(inst[6:0] == R_TYPE ||
 	   inst[6:0] == S_TYPE ||
 	   inst[6:0] == B_TYPE)//R or S or B
-	    read_reg2 <= 1'b1;
+	    read_reg2 = 1'b1;
 	else
-	    read_reg2 <= 1'b0;
+	    read_reg2 = 1'b0;
 	    
 	always @ *
 	if(inst[6:0] == R_TYPE ||
 	   inst[6:0] == S_TYPE ||
 	   inst[6:0] == B_TYPE)//R or S or B
-	     rs2 <= inst[24:20];
+	     rs2 = inst[24:20];
 	else
-	     rs2 <= 5'bz;
+	     rs2 = 5'bz;
 	     
 	always @ *
 	if(inst[6:0] == R_TYPE   ||
 	   inst[6:0] == I_TYPE_L ||
 	   inst[6:0] == I_TYPE_I ||
 	   inst[6:0] == J_TYPE)//R or I or J
-	     write_reg <= 1'b1;
+	     write_reg = 1'b1;
 	else
-	     write_reg <= 1'b0;
+	     write_reg = 1'b0;
 	 
 	always @ *
 	if(inst[6:0] == R_TYPE   ||
 	   inst[6:0] == I_TYPE_L ||
 	   inst[6:0] == I_TYPE_I ||
 	   inst[6:0] == J_TYPE)//R or I or J
-	     rd <= inst[11:7];
+	     rd = inst[11:7];
 	else
-	     rd <= 5'bz;
+	     rd = 5'bz;
 	     
 	always @ *
 	if(inst[6:0] == I_TYPE_L)
-	   read_mem <= 1'b1;
+	   read_mem = 1'b1;
 	else
-	   read_mem <= 1'b0;
+	   read_mem = 1'b0;
 	   
 	always @ *
 	if(inst[6:0] == S_TYPE)
-	   write_mem <= 1'b1;
+	   write_mem = 1'b1;
 	else
-	   write_mem <= 1'b0;
+	   write_mem = 1'b0;
 	   	 
 	always @ *
 	begin
@@ -161,31 +161,31 @@ module id(
 	  case(inst[6:0])
 	   I_TYPE_L: //I type
 	      if(inst[31])
-	        imm <= {20'hfffff, inst[31:20]};
+	        imm = {20'hfffff, inst[31:20]};
 	     else
-	        imm <= {20'b0, inst[31:20]};
+	        imm = {20'b0, inst[31:20]};
 	   I_TYPE_I: //I type
 	     if(inst[31])
-	        imm <= {20'hfffff, inst[31:20]};
+	        imm = {20'hfffff, inst[31:20]};
 	     else
-	        imm <= {20'b0, inst[31:20]};
+	        imm = {20'b0, inst[31:20]};
 	   S_TYPE: //S type
 	      if(inst[31])
-	        imm <= {20'hfffff, inst[31:25], inst[11:7]};
+	        imm = {20'hfffff, inst[31:25], inst[11:7]};
 	     else
-	        imm <= {20'b0, inst[31:25], inst[11:7]};    
+	        imm = {20'b0, inst[31:25], inst[11:7]};    
   	  B_TYPE: //B type
 	       if(inst[31])
-	         imm <= {20'hfffff, inst[7], inst[30:25], inst[11:8], 1'b0};
+	         imm = {20'hfffff, inst[7], inst[30:25], inst[11:8], 1'b0};
 	      else
-	         imm <= {20'b0, inst[7], inst[30:25], inst[11:8], 1'b0};
+	         imm = {20'b0, inst[7], inst[30:25], inst[11:8], 1'b0};
 	   J_TYPE: //J type
   	     if(inst[31])
-	        imm <= {12'hfff, inst[19:12], inst[20], inst[30:21], 1'b0};
+	        imm = {12'hfff, inst[19:12], inst[20], inst[30:21], 1'b0};
 	      else
-	        imm <= {12'b0, inst[19:12], inst[20], inst[30:21], 1'b0};
+	        imm = {12'b0, inst[19:12], inst[20], inst[30:21], 1'b0};
 	   default:
-	     imm <= 32'bz;
+	     imm = 32'bz;
     endcase
 	end
 	
@@ -193,18 +193,18 @@ module id(
 	// for ex load data hazard
 	// J type don't have rs1 or rs2
 	if(inst[6:0] == J_TYPE)
-	       id_stall_req <= 1'b0;
+	       id_stall_req = 1'b0;
 	//for ex load data hazard
 	// I type only have rs1
 	else if((inst[6:0]==I_TYPE_L || inst[6:0]==I_TYPE_I) && 
 	   id_ex_read_mem && id_ex_rd==inst[19:15]) 
-	       id_stall_req <= 1'b1;
+	       id_stall_req = 1'b1;
 	// for ex load data hazard
 	// R S type have both rs1 rs2
 	else if((inst[6:0]==R_TYPE || inst[6:0]==S_TYPE) &&
 	   id_ex_read_mem && (id_ex_rd==inst[19:15] ||
 	   id_ex_rd==inst[24:20]))
-	       id_stall_req <= 1'b1;
+	       id_stall_req = 1'b1;
 	//for branch data hazard
 	//If a comparison register is a destination of 
 	//preceding ALU instruction or 
@@ -216,11 +216,11 @@ module id(
 	else if(inst[6:0]==B_TYPE && id_ex_write_reg && 
 	   id_ex_rd != 5'b0 && (id_ex_rd==inst[19:15] || 
 	   id_ex_rd==inst[24:20]))
-	       id_stall_req <= 1'b1;
+	       id_stall_req = 1'b1;
 	else if(inst[6:0]==B_TYPE && ex_mem_read_mem && 
 	   (ex_mem_rd==inst[19:15] || ex_mem_rd==inst[24:20]))
-	       id_stall_req <= 1'b1;
+	       id_stall_req = 1'b1;
 	else
-	       id_stall_req <= 1'b0; 
+	       id_stall_req = 1'b0; 
 	       
 endmodule	   

@@ -12,26 +12,26 @@ module stall(
 
   always @ *
   if(stall_req_id  || stall_req_ex || stall_req_men)
-      if_stall <= 1'b1;
+      if_stall = 1'b1;
   else
-      if_stall <= 1'b0;
+      if_stall = 1'b0;
 
   always @ *
   if(stall_req_id  || stall_req_ex || stall_req_men)
-      if_id_stall <= 1'b1;
+      if_id_stall = 1'b1;
   else
-      if_id_stall <= 1'b0;
+      if_id_stall = 1'b0;
        
   always @ *
   if(stall_req_ex || stall_req_men) 
-      id_ex_stall <= 1'b1;
+      id_ex_stall = 1'b1;
   else
-      id_ex_stall <= 1'b0;
+      id_ex_stall = 1'b0;
       
   always @ *
   if(stall_req_men)
-      ex_mem_stall <= 1'b1;
+      ex_mem_stall = 1'b1;
   else
-      ex_mem_stall <= 1'b0;
+      ex_mem_stall = 1'b0;
       
 endmodule
