@@ -25,7 +25,7 @@ module branch_and_jmp(
 	parameter NJUM_W = 2'b11;
 	parameter NJUM_S = 2'b10;
 	
-	reg [64-1:0] ghr;
+	reg [64-1:0] bhr;
     reg [32-1:0] inst_addr_record;
 	reg history_req;
     wire [4-1:0] inst_addr_low_4bit, pht_addr;
@@ -33,7 +33,7 @@ module branch_and_jmp(
     wire [4-1:0] pht_sel;
 	wire [1:0] state, next_state;
 
-    //write ghr
+    //write bhr
 	always@ * 
 		if((alu_op == BEQ) || (alu_op == BLT) || (alu_op == BGE))
 			history_req = 1'b1;
@@ -51,17 +51,17 @@ module branch_and_jmp(
     
 	always@(posedge clk or negedge rst_n) begin
         if(!rst_n)
-            ghr <= 64'b0;
+            bhr <= 64'b0;
         else if(we) begin
             if(jmp_from_ex)
-                ghr[inst_addr_low_4bit*4+:4] <= {ghr[inst_addr_low_4bit*4+:3], 1'b1};
+                bhr[inst_addr_low_4bit*4+:4] <= {bhr[inst_addr_low_4bit*4+:3], 1'b1};
             else
-                ghr[inst_addr_low_4bit*4+:4] <= {ghr[inst_addr_low_4bit*4+:3], 1'b0};
+                bhr[inst_addr_low_4bit*4+:4] <= {bhr[inst_addr_low_4bit*4+:3], 1'b0};
         end
     end
 
 	//update pht
-	assign pht_addr = inst_addr_low_4bit ^ ghr[inst_addr_low_4bit*4+:4];
+	assign pht_addr = inst_addr_low_4bit ^ bhr[inst_addr_low_4bit*4+:4];
 	assign state = pht[pht_addr*2+:2];
 	// update bimodel
 	always @ * begin
@@ -118,7 +118,7 @@ module branch_and_jmp(
 	end
 
     //predict
-    assign pht_sel = old_inst_addr[3:0] ^ ghr[old_inst_addr[3:0]*4+:4];
+    assign pht_sel = old_inst_addr[3:0] ^ bhr[old_inst_addr[3:0]*4+:4];
 	assign bim = pht[pht_sel*2+:2];
     always @ * begin
 		case(bim)
