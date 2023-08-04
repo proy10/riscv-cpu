@@ -389,21 +389,21 @@ module riscv(
       .new_reg_data2(new_reg_data2)
     );
     
-    forwarding ID_FORWARDING( //Solve Data Hazards for id(for branch) 
-      //=================input=================//
-      .id_ex_rs1(rs1),
-      .id_ex_rs2(rs2),
-      .ex_mem_write_reg(write_reg_to_mem),
-      .ex_mem_rd(rd_to_mem),
-      .mem_wb_write_reg(write_reg_to_reg),
-      .mem_wb_rd(rd_to_reg),
-      .ex_mem_result(result_to_mem),
-      .write_back_data(write_back_data),
-      .old_reg_data1(reg_data1),
-      .old_reg_data2(reg_data2),
-      //================output=================//
-      .new_reg_data1(br_new_reg_data1),
-      .new_reg_data2(br_new_reg_data2)
-    );
+    // forwarding ID_FORWARDING( //Solve Data Hazards for id(for branch) 
+    //   //=================input=================//
+    //   .id_ex_rs1(rs1),
+    //   .id_ex_rs2(rs2),
+    //   .ex_mem_write_reg(write_reg_to_mem),
+    //   .ex_mem_rd(rd_to_mem),
+    //   .mem_wb_write_reg(write_reg_to_reg),
+    //   .mem_wb_rd(rd_to_reg),
+    //   .ex_mem_result(result_to_mem),
+    //   .write_back_data(write_back_data),
+    //   .old_reg_data1(reg_data1),
+    //   .old_reg_data2(reg_data2),
+    //   //================output=================//
+    //   .new_reg_data1(br_new_reg_data1),
+    //   .new_reg_data2(br_new_reg_data2)
+    // );
       
 endmodule
