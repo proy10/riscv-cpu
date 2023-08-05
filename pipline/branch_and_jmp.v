@@ -152,6 +152,96 @@ endmodule
 
 
 
+module priority_encoder(
+	input [7:0]				din,
+	output					valid,
+	output reg [2:0]		pos
+);
+
+	always@(*) begin
+		if(!din[0]) pos = 3'd0;
+		else if(!din[1]) pos = 3'd1;
+		else if(!din[2]) pos = 3'd2;
+		else if(!din[3]) pos = 3'd3;
+		else if(!din[4]) pos = 3'd4;
+		else if(!din[5]) pos = 3'd5;
+		else if(!din[6]) pos = 3'd6;
+		else if(!din[7]) pos = 3'd7;
+		else pos = 3'd0;
+	end
+
+	assign valid = (~din) ? 1'b1 : 1'b0;;
+
+endmodule
+
+
+module and_tree #(
+	parameter tp_entry_num = 4096
+)(
+	input [tp_entry_num-1:0]	din,
+	output						valid,
+	output reg [11:0]			waddr
+);
+
+	// level 0
+	wire [7:0] cp0;
+	genvar i_prio_enc_tree_level_0;
+	generate
+		for(i_prio_enc_tree_level_0=0; i_prio_enc_tree_level_0<8; i_prio_enc_tree_level_0=i_prio_enc_tree_level_0+1) begin: i_prio_enc_tree_level_0
+			// assign cp0[i_prio_enc_tree_level_0] = &din[i_prio_enc_tree_level_0*512+:512];
+			assign cp0[i_prio_enc_tree_level_0] = &cp1[i_prio_enc_tree_level_0*8+:8];
+		end
+	endgenerate
+
+	// level 1
+	wire [63:0] cp1;
+	genvar i_prio_enc_tree_level_1;
+	generate
+		for(i_prio_enc_tree_level_1=0; i_prio_enc_tree_level_1<64; i_prio_enc_tree_level_1=i_prio_enc_tree_level_1+1) begin: i_prio_enc_tree_level_1
+			// assign cp1[i_prio_enc_tree_level_1] = &din[i_prio_enc_tree_level_1*64+:64];
+			assign cp1[i_prio_enc_tree_level_1] = &cp2[i_prio_enc_tree_level_1*8+:8];
+		end
+	endgenerate
+
+	// level 2
+	wire [511:0] cp2;
+	genvar i_prio_enc_tree_level_2;
+	generate
+		for(i_prio_enc_tree_level_2=0; i_prio_enc_tree_level_2<512; i_prio_enc_tree_level_2=i_prio_enc_tree_level_2+1) begin: i_prio_enc_tree_level_2
+			assign cp2[i_prio_enc_tree_level_2] = &din[i_prio_enc_tree_level_2*8+:8];
+		end
+	endgenerate	
+
+	wire level_0_valid, level_1_valid, level_2_valid, level_3_valid;
+	wire [2:0] level_0_pos, level_1_pos, level_2_pos, level_3_pos;
+
+	priority_encoder tp_2_priority_encoder(.din(cp0), .valid(level_0_valid), .pos(level_0_pos));
+
+	wire [7:0] level_1_din;
+	assign level_1_din = (level_0_valid) ? cp1[level_0_pos*8+:8] : 8'hff;
+	priority_encoder tp_2_priority_encoder(.din(level_1_din), .valid(level_1_valid), .pos(level_1_pos));
+
+	wire [7:0] level_2_din;
+	assign level_2_din = (level_1_valid) ? cp2[level_0_pos*64+level_1_pos*8+:8] : 8'hff;
+	priority_encoder tp_2_priority_encoder(.din(level_2_din), .valid(level_2_valid), .pos(level_2_pos));
+
+	wire [7:0] level_3_din;
+	assign level_3_din = (level_2_valid) ? din[level_0_pos*512+level_1_pos*64+level_2_pos*8+:8] : 8'hff;
+	priority_encoder tp_2_priority_encoder(.din(level_3_din), .valid(level_3_valid), .pos(level_3_pos));
+
+	// reg [11:0] allocate_waddr;
+	always @(*) begin
+		if(level_0_valid)
+			waddr = level_0_pos * 512 + level_1_pos * 64 + level_2_pos * 8 + level_3_pos;
+		else
+			waddr = 12'h0;
+	end
+
+	assign valid = level_0_valid;
+
+endmodule
+
+
 //For Branch Hazard
 //Target address adder and Register comparator
 module branch_and_jmp(
@@ -433,7 +523,7 @@ module branch_and_jmp(
 	always@(*) begin
 		if(!rst_n)
 			tp_2_we_u = 1'b0;
-		else if(tp_2_hit) begin
+		else if(tp_2_we_pred) begin
 			if(tp_1_hit) begin
 				if(tp_1_pred_res != tp_2_pred_res)
 					tp_2_we_u = 1'b1;
@@ -451,6 +541,20 @@ module branch_and_jmp(
 			tp_2_we_u = 1'b0;
 	end
 
+	reg [18:0] branch_cnt;
+	always@(posedge clk or negedge rst_n) begin
+		if(!rst_n)
+			branch_cnt <= 19'h0;
+		else if(is_branch_inst)
+			branch_cnt <= branch_cnt + 1'h1;
+	end
+
+	wire useful_msb_period_rst_n;
+	assign useful_msb_period_rst_n = ~(branch_cnt==19'h3ffff);
+
+	wire useful_lsb_period_rst_n;
+	assign useful_lsb_period_rst_n = ~(branch_cnt==19'h7ffff);
+
 	wire [1:0] tp_2_u_state, tp_2_u_next_state;
 	assign tp_2_u_state = (tp_2_we_u) ? tag_predictor_2[tp_2_waddr][1:0] : 2'h0;
 	two_bit_cnt tp_2_two_bit_cnt(.we(tp_2_we_u), .jmp(jmp), .pred(tp_2_pred_res), .state(tp_2_u_state), .next_state(tp_2_u_next_state));
@@ -458,13 +562,99 @@ module branch_and_jmp(
 	integer i_tp_pred_2_u;
 	always@(posedge clk or negedge rst_n) begin
 		if(!rst_n)
-			for(i_tp_pred_2_u=0; i_tp_pred_2_u<tp_entry_num; i_tp_pred_2_u=i_tp_pred_2_u+1) begin: i_tp_pred_2_u
+			for(i_tp_pred_2_u=0; i_tp_pred_2_u<tp_entry_num; i_tp_pred_2_u=i_tp_pred_2_u+1) begin: i_tp_pred_2_u_rst
 				tag_predictor_2[i_tp_pred_2_u][1:0] <= 2'h0;
+			end
+		else if(!useful_msb_period_rst_n)
+			for(i_tp_pred_2_u=0; i_tp_pred_2_u<tp_entry_num; i_tp_pred_2_u=i_tp_pred_2_u+1) begin: i_tp_pred_2_u_msb_rst
+				tag_predictor_2[i_tp_pred_2_u][1] <= 1'h0;
+			end
+		else if(!useful_lsb_period_rst_n)
+			for(i_tp_pred_2_u=0; i_tp_pred_2_u<tp_entry_num; i_tp_pred_2_u=i_tp_pred_2_u+1) begin: i_tp_pred_2_u_lsb_rst
+				tag_predictor_2[i_tp_pred_2_u][0] <= 1'h0;
 			end
 		else if(tp_2_we_u)
 			tag_predictor_2[tp_2_waddr][1:0] <= tp_2_u_next_state;
 	end
 
+
+	// allocate
+	wire tp_2_u_re;
+	assign tp_2_u_re = (~tp_2_hit) & (~tp_3_hit) & (~tp_4_hit);
+
+	// wire [tp_entry_num*2-1:0] tp_2_u_all;
+	wire [tp_entry_num-1:0] tp_2_u_all;
+	genvar i_tp_2_u;
+	generate
+		for(i_tp_2_u=0; i_tp_2_u<tp_entry_num; i_tp_2_u=i_tp_2_u+1) begin: i_tp_2_u
+			// assign tp_2_u_all[i_tp_2_u*2+:2] = (tp_2_u_re) ? tag_predictor_2[i_tp_2_u][1:0] : 2'b0;
+			assign tp_2_u_all[i_tp_2_u] = (tp_2_u_re) ? (&tag_predictor_2[i_tp_2_u][1:0]) : 1'b1;
+		end
+	endgenerate
+
+	// // level 0
+	// wire [7:0] cp0;
+	// genvar i_prio_enc_tree_level_0;
+	// generate
+	// 	for(i_prio_enc_tree_level_0=0; i_prio_enc_tree_level_0<8; i_prio_enc_tree_level_0=i_prio_enc_tree_level_0+1) begin: i_prio_enc_tree_level_0
+	// 		assign cp0[i_prio_enc_tree_level_0] = &tp_2_u_all[i_prio_enc_tree_level_0*512+:512];
+	// 	end
+	// endgenerate
+
+	// // level 1
+	// wire [63:0] cp1;
+	// genvar i_prio_enc_tree_level_1;
+	// generate
+	// 	for(i_prio_enc_tree_level_1=0; i_prio_enc_tree_level_1<64; i_prio_enc_tree_level_1=i_prio_enc_tree_level_1+1) begin: i_prio_enc_tree_level_1
+	// 		assign cp1[i_prio_enc_tree_level_1] = &tp_2_u_all[i_prio_enc_tree_level_1*64+:64];
+	// 	end
+	// endgenerate
+
+	// // level 2
+	// wire [511:0] cp2;
+	// genvar i_prio_enc_tree_level_2;
+	// generate
+	// 	for(i_prio_enc_tree_level_2=0; i_prio_enc_tree_level_2<512; i_prio_enc_tree_level_2=i_prio_enc_tree_level_2+1) begin: i_prio_enc_tree_level_2
+	// 		assign cp2[i_prio_enc_tree_level_2] = &tp_2_u_all[i_prio_enc_tree_level_2*8+:8];
+	// 	end
+	// endgenerate	
+
+	// wire level_0_valid, level_1_valid, level_2_valid, level_3_valid;
+	// wire [2:0] level_0_pos, level_1_pos, level_2_pos, level_3_pos;
+
+	// priority_encoder tp_2_priority_encoder(.din(cp0), .valid(level_0_valid), .pos(level_0_pos));
+
+	// wire [7:0] level_1_din;
+	// assign level_1_din = (level_0_valid) ? cp1[level_0_pos*8+:8] : 8'hff;
+	// priority_encoder tp_2_priority_encoder(.din(level_1_din), .valid(level_1_valid), .pos(level_1_pos));
+
+	// wire [7:0] level_2_din;
+	// assign level_2_din = (level_1_valid) ? cp2[level_0_pos*64+level_1_pos*8+:8] : 8'hff;
+	// priority_encoder tp_2_priority_encoder(.din(level_2_din), .valid(level_2_valid), .pos(level_2_pos));
+
+	// wire [7:0] level_3_din;
+	// assign level_3_din = (level_2_valid) ? tp_2_u_all[level_0_pos*512+level_1_pos*64+level_2_pos*8+:8] : 8'hff;
+	// priority_encoder tp_2_priority_encoder(.din(level_3_din), .valid(level_3_valid), .pos(level_3_pos));
+
+	// reg [11:0] tp_2_allocate_waddr;
+	// always @(*) begin
+	// 	if(level_0_valid)
+	// 		tp_2_allocate_waddr = level_0_pos * 512 + level_1_pos * 64 + level_2_pos * 8 + level_3_pos;
+	// 	else
+	// 		tp_2_allocate_waddr = 12'h0;
+	// end
+
+	wire [11:0] tp_2_allocate_waddr;
+	and_tree tp_2_and_tree();///////////////////////////////////////////////////////////
+
+	reg tp_2_allocate_we;
+	always@(*) begin
+		if(~tp_2_hit && ~tp_3_hit && ~tp_4_hit) begin
+			
+		end
+
+
+	end
 
 	// update tag when allocate
 	integer i_tp_pred_2_tag;
