@@ -242,8 +242,7 @@ endmodule
 // endmodule
 
 
-//For Branch Hazard
-//Target address adder and Register comparator
+
 module branch_and_jmp(
     input              clk,
     input              rst_n,  
