@@ -249,8 +249,6 @@ module branch_and_jmp(
 
 	// predict channel
 	input wire[5:0]    alu_op,
-	// input wire[31:0]   reg_data1,
-	// input wire[31:0]   reg_data2,
 	input wire[31:0]   imm,
 	input wire[31:0]   old_inst_addr,
 	output reg         jmp_predict,
@@ -258,7 +256,6 @@ module branch_and_jmp(
 
 	// update channel
 	input wire		   we,  // from ex, indicating write enable
-	// input wire		   jmp_from_ex,  // from ex, indicating branch or not
 	input wire		   jmp
 
 );
